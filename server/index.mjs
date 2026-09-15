@@ -1,5 +1,9 @@
 import { createServer } from 'node:http';
-import { PDFParse } from 'pdf-parse';
+import DOMMatrix from '@thednp/dommatrix';
+globalThis.DOMMatrix = DOMMatrix;
+globalThis.ImageData ??= class ImageData {};
+globalThis.Path2D ??= class Path2D {};
+const { PDFParse } = await import('pdf-parse');
 
 const port = Number(process.env.API_PORT ?? 8787);
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT?.replace(/\/$/, '');
