@@ -14,11 +14,12 @@ const extractionSchema = { type: 'object', additionalProperties: false, properti
 function json(res, status, body) { res.writeHead(status, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(body)); }
 const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' }); return res.end(); }
-  if (req.method !== 'POST' || !['/api/extract', '/api/extract-pdf'].includes(req.url)) return json(res, 404, { error: 'Not found' });
-  if (!endpoint || !deployment || !apiKey) return json(res, 503, { error: 'Azure OpenAI is not configured. Use synthetic demo mode.' });
+  if (req.method !== 'POST' || !['/api/extract', '/api/extract-pdf', '/api/pdf-text'].includes(req.url)) return json(res, 404, { error: 'Not found' });
   try {
     let raw = ''; for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw);
+    if (req.url === '/api/pdf-text') return json(res, 200, { extractedText: (await pdfParse(Buffer.from(body.pdfBase64, 'base64'))).text });
+    if (!endpoint || !deployment || !apiKey) return json(res, 503, { error: 'Azure OpenAI is not configured. Use synthetic demo mode.' });
     const notice = req.url === '/api/extract-pdf' ? (await pdfParse(Buffer.from(body.pdfBase64, 'base64'))).text : body.notice;
     const response = await fetch(`${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`, { method: 'POST', headers: { 'api-key': apiKey, 'content-type': 'application/json' }, body: JSON.stringify({ temperature: 0, response_format: { type: 'json_schema', json_schema: { name: 'restriction_extraction', strict: true, schema: extractionSchema } }, messages: [{ role: 'system', content: 'Extract only facts stated in the notice. Use null for missing, conditional, changeable, or ambiguous fields. If the notice contains two or more different work windows, do not choose one: return startsAt=null, endsAt=null, and confidence below 0.5. Treat phrases such as may occur, anticipated, subject to change, weather permitting, or check the website as uncertainty. Do not infer addresses, dates, times, routes, legal conclusions, or street segments from a map. Return ISO local datetime strings only when one complete, unambiguous date and time window is explicitly stated.' }, { role: 'user', content: notice }] }) });
     if (!response.ok) return json(res, 502, { error: `Azure OpenAI returned ${response.status}: ${await response.text()}` });
