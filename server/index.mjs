@@ -14,6 +14,7 @@ const extractionSchema = { type: 'object', additionalProperties: false, properti
   street: { type: ['string', 'null'] }, crossStreet: { type: ['string', 'null'] }, startsAt: { type: ['string', 'null'] }, endsAt: { type: ['string', 'null'] }, confidence: { type: 'number' }, sourceQuote: { type: 'string' }
 }, required: ['street', 'crossStreet', 'startsAt', 'endsAt', 'confidence', 'sourceQuote'] };
 async function extractPdfText(buffer) { const parser = new PDFParse({ data: buffer }); try { return (await parser.getText()).text; } finally { await parser.destroy(); } }
+function streetName(value) { if (!value) return value; const matches = value.match(/[A-Za-z0-9 .'-]+\s+(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Drive|Dr)\b/gi); return (matches?.at(-1)?.trim() ?? value.trim()).replace(/^(and|between)\s+/i, ''); }
 function json(res, status, body) { res.writeHead(status, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(body)); }
 const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' }); return res.end(); }
@@ -28,6 +29,7 @@ const server = createServer(async (req, res) => {
     if (!response.ok) return json(res, 502, { error: `Azure OpenAI returned ${response.status}: ${await response.text()}` });
     const completion = await response.json();
     const extracted = JSON.parse(completion.choices[0].message.content);
+    extracted.street = streetName(extracted.street); extracted.crossStreet = streetName(extracted.crossStreet);
     const windows = notice.match(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\s*(?:to|-|–)\s*\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b/gi) ?? [];
     const uncertain = /\b(may occur|subject to change|anticipated|weather permitting|timelines? may|check .*updates?)\b/i.test(notice);
     if (windows.length > 1 || uncertain) { extracted.startsAt = null; extracted.endsAt = null; extracted.confidence = Math.min(Number(extracted.confidence) || 0, 0.25); }
