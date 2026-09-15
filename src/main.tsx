@@ -4,7 +4,7 @@ import { evaluate, Job, Restriction } from './domain';
 import './styles.css';
 
 const notices = [
-  { title: 'Municipal bulletin', text: `CITY OF MAPLE GROVE\nTEMPORARY STREET RESTRICTION\nCedar Avenue between 1st Street and Pine Street\nSeptember 18, 2026 · 9:00 AM–1:00 PM\nWater-main repair. No curb access in the declared segment.`, restriction: { street: 'Cedar Ave', crossStreet: 'Pine St', startsAt: '2026-09-18T09:00', endsAt: '2026-09-18T13:00', approved: false } as Restriction },
+  { title: 'Municipal bulletin', text: `CITY OF MAPLE GROVE | PUBLIC WORKS DEPARTMENT\nFIELD NOTICE 26-0918-B · Issued September 12, 2026\n\nTEMPORARY ACCESS RESTRICTION\nProject: WM-442 water-main repair\nLocation: Cedar Avenue, from the 1st Street intersection to Pine Street\n\nWORK WINDOW: Friday, September 18, 2026, 9:00 a.m. to 1:00 p.m.\nCrew staging may begin at 8:30 a.m. The work window is the only restriction period listed in this notice.\n\nNearby reference: the community center is open Saturday, September 19, from 10:00 a.m.\nQuestions: Public Works desk, 555-0142. Emergency access remains available.`, restriction: { street: 'Cedar Ave', crossStreet: 'Pine St', startsAt: '2026-09-18T09:00', endsAt: '2026-09-18T13:00', approved: false } as Restriction },
   { title: 'Incomplete bulletin', text: `CITY OF MAPLE GROVE\nTEMPORARY STREET RESTRICTION\nOak Boulevard near the community center\nSeptember 19, 2026\nRoad work is planned. Check the posted signs for timing.`, restriction: { street: 'Oak Blvd', crossStreet: '', startsAt: '', endsAt: '', approved: false } as Restriction }
 ];
 const jobs: Job[] = [
