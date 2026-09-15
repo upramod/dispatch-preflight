@@ -1,5 +1,7 @@
 import { createServer } from 'node:http';
-import pdfParse from 'pdf-parse';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 const port = Number(process.env.API_PORT ?? 8787);
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT?.replace(/\/$/, '');
