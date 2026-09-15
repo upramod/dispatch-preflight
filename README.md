@@ -29,6 +29,7 @@ npm run dev
 Run tests and a production build:
 
 ```bash
+npm install
 npm test
 npm run build
 ```
