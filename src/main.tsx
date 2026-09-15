@@ -5,7 +5,7 @@ import './styles.css';
 import './pdf.css';
 
 const notices = [
-  { title: 'Municipal bulletin', text: `CITY OF MAPLE GROVE | PUBLIC WORKS DEPARTMENT\nFIELD NOTICE 26-0918-B · Issued September 12, 2026\n\nTEMPORARY ACCESS RESTRICTION\nProject: WM-442 water-main repair\nLocation: Cedar Avenue, from the 1st Street intersection to Pine Street\n\nWORK WINDOW: Friday, September 18, 2026, 9:00 a.m. to 1:00 p.m.\nCrew staging may begin at 8:30 a.m. The work window is the only restriction period listed in this notice.\n\nNearby reference: the community center is open Saturday, September 19, from 10:00 a.m.\nQuestions: Public Works desk, 555-0142. Emergency access remains available.`, restriction: { street: 'Cedar Ave', crossStreet: 'Pine St', startsAt: '2026-09-18T09:00', endsAt: '2026-09-18T13:00', approved: false } as Restriction },
+  { title: 'Municipal bulletin', text: `CITY OF MAPLE GROVE | PUBLIC WORKS DEPARTMENT\nFIELD NOTICE 26-0918-B · Issued September 12, 2026\n\nTEMPORARY ACCESS RESTRICTION\nProject: WM-442 water-main repair\nLocation: Pine Street, from the 1st Street intersection to Oak Boulevard\n\nWORK WINDOW: Friday, September 18, 2026, 9:00 a.m. to 1:00 p.m.\nCrew staging may begin at 8:30 a.m. The work window is the only restriction period listed in this notice.\n\nNearby reference: the community center is open Saturday, September 19, from 10:00 a.m.\nQuestions: Public Works desk, 555-0142. Emergency access remains available.`, restriction: { street: 'Pine St', crossStreet: 'Oak Blvd', startsAt: '2026-09-18T09:00', endsAt: '2026-09-18T13:00', approved: false } as Restriction },
   { title: 'Incomplete bulletin', text: `CITY OF MAPLE GROVE\nTEMPORARY STREET RESTRICTION\nOak Boulevard near the community center\nSeptember 19, 2026\nRoad work is planned. Check the posted signs for timing.`, restriction: { street: 'Oak Blvd', crossStreet: '', startsAt: '', endsAt: '', approved: false } as Restriction }
 ];
 const jobs: Job[] = [
@@ -16,7 +16,7 @@ const jobs: Job[] = [
 
 function App() {
   const [noticeIndex, setNoticeIndex] = useState(0);
-  const [restriction, setRestriction] = useState(notices[0].restriction);
+  const [restriction, setRestriction] = useState({ street: '', crossStreet: '', startsAt: '', endsAt: '', approved: false } as Restriction);
   const [extractionStatus, setExtractionStatus] = useState('Synthetic demo facts');
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -25,7 +25,7 @@ function App() {
   const activeNotice = notices[noticeIndex];
   const decision = evaluate(selected, restriction);
   async function extractPdf(file: File) {
-    setExtractionProgress(10); setExtractionStatus(`Reading ${file.name}…`);
+    setExtractionProgress(10); setExtractionStatus(`Reading ${file.name}…`); setExtractedText(null); setRestriction({ street: '', crossStreet: '', startsAt: '', endsAt: '', approved: false });
     try { const bytes = new Uint8Array(await file.arrayBuffer()); setExtractionProgress(25); let binary = ''; bytes.forEach(byte => binary += String.fromCharCode(byte)); setPdfUrl(URL.createObjectURL(file)); const textResponse = await fetch('/api/pdf-text', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({pdfBase64: btoa(binary)}) }); const textData = await textResponse.json(); if (!textResponse.ok) throw new Error(textData.error); setExtractedText(textData.extractedText); setExtractionProgress(50); setExtractionStatus('PDF text extracted. Sending it to Azure OpenAI…'); const r = await fetch('/api/extract', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({notice: textData.extractedText}) }); setExtractionProgress(85); const data = await r.json(); if (!r.ok) throw new Error(data.error); setRestriction({ ...data, approved: false }); setExtractionProgress(100); setExtractionStatus(`Azure OpenAI · confidence ${Math.round(data.confidence * 100)}% · PDF text extracted`); } catch (e) { setExtractionProgress(0); setExtractionStatus(e instanceof Error ? e.message : 'PDF extraction failed'); }
   }
   return <main>
