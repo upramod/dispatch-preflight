@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:api": "tsx server/index.ts",
+    "dev:api": "node server/index.mjs",
     "build": "tsc -b && vite build",
     "test": "vitest run"
   },
@@ -19,7 +19,6 @@
   "devDependencies": {
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
-    "vitest": "2.1.9",
-    "tsx": "4.19.2"
+    "vitest": "2.1.9"
   }
 }
